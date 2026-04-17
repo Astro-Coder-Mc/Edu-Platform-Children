@@ -1,0 +1,234 @@
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700;900&family=Inter:wght@400;500;600;700;900&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-serif: "Space Grotesk", ui-sans-serif, system-ui, sans-serif; /* Repurposing serif var for display font to minimize TSX changes */
+  
+  --color-primary: #00E676; /* Bright Green */
+  --color-primary-light: #69F0AE;
+  --color-primary-dark: #00C853;
+  --color-accent: #2979FF; /* Electric Blue */
+  --color-accent-light: #82B1FF;
+  --color-bg: #F4F4F0; /* Off white */
+  --color-surface: #FFFFFF;
+  --color-text: #000000;
+  --color-text-muted: #424242;
+  --color-border: #000000;
+  --color-error: #FF1744; /* Hot Pink/Red */
+  --color-success: #00E676;
+  --color-highlight: #FFEA00; /* Sunny Yellow */
+  
+  --radius-sm: 0px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-xl: 16px;
+  --radius-full: 9999px;
+  
+  --shadow-sm: 2px 2px 0px 0px rgba(0,0,0,1);
+  --shadow-md: 4px 4px 0px 0px rgba(0,0,0,1);
+  --shadow-lg: 8px 8px 0px 0px rgba(0,0,0,1);
+  --shadow-hover: 4px 4px 0px 0px rgba(0,0,0,1);
+}
+
+@layer base {
+  body {
+    @apply bg-bg text-text font-sans antialiased min-h-screen flex flex-col;
+    line-height: 1.6;
+    background-image: radial-gradient(#000000 1px, transparent 1px);
+    background-size: 32px 32px;
+    background-color: var(--color-bg);
+  }
+  
+  html {
+    scroll-behavior: smooth;
+  }
+  
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-serif text-text font-black uppercase tracking-tight;
+  }
+  
+  a {
+    @apply transition-all duration-200;
+  }
+}
+
+.layout {
+  @apply flex flex-col min-h-screen;
+}
+
+.main-content {
+  @apply flex-grow pt-24;
+}
+
+.navbar {
+  @apply bg-surface border-b-4 border-border z-50 h-20 fixed top-0 left-0 right-0;
+}
+
+.navbar-container {
+  @apply flex justify-between items-center h-full container mx-auto px-6;
+}
+
+.navbar-brand {
+  @apply flex items-center gap-3 text-2xl font-serif font-black text-text uppercase tracking-tighter;
+}
+
+.navbar-brand .icon {
+  @apply text-primary;
+}
+
+.navbar-menu {
+  @apply hidden lg:flex items-center gap-8;
+}
+
+.navbar-menu.open {
+  @apply flex flex-col fixed inset-0 top-20 bg-surface p-8 z-[60] h-screen border-t-4 border-border overflow-y-auto;
+}
+
+.nav-link {
+  @apply text-text font-bold text-base hover:text-accent hover:-translate-y-1 transition-all relative py-2 uppercase tracking-wide w-full lg:w-auto text-left lg:text-center;
+}
+
+.nav-link.active {
+  @apply text-accent;
+}
+
+.nav-link.active::after {
+  content: '';
+  @apply absolute -bottom-1 left-0 w-full h-1 bg-accent;
+}
+
+.mobile-menu-btn {
+  @apply lg:hidden text-text bg-transparent border-none text-2xl;
+}
+
+.footer {
+  @apply bg-accent text-text mt-16 py-16 border-t-4 border-border;
+}
+
+.footer-brand {
+  @apply flex items-center gap-2 text-2xl font-serif font-black text-text mb-6 uppercase;
+}
+
+.footer h4 {
+  @apply text-text mb-6 font-serif text-xl uppercase font-black;
+}
+
+.footer-links {
+  @apply list-none space-y-3 font-bold;
+}
+
+.footer-links a {
+  @apply text-text hover:text-surface hover:translate-x-2 inline-block transition-transform;
+}
+
+.footer-bottom {
+  @apply text-center text-text font-bold border-t-4 border-border pt-8 mt-12 text-sm uppercase;
+}
+
+.container {
+  @apply w-full max-w-7xl mx-auto px-6;
+}
+
+.btn {
+  @apply inline-flex items-center justify-center gap-2 px-8 py-3 rounded-xl font-serif font-bold uppercase tracking-wider transition-all duration-200 shadow-md border-4 border-border;
+}
+
+.btn:active {
+  @apply translate-x-[4px] translate-y-[4px] shadow-none;
+}
+
+.btn-primary {
+  @apply bg-primary text-text hover:bg-primary-light hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-hover;
+}
+
+.btn-secondary {
+  @apply bg-highlight text-text hover:bg-surface hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-hover;
+}
+
+.btn-accent {
+  @apply bg-accent text-white hover:bg-accent-light hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-hover;
+}
+
+.card {
+  @apply bg-surface rounded-xl shadow-lg border-4 border-border transition-all duration-200 flex flex-col p-8;
+}
+
+.card:hover {
+  @apply shadow-hover translate-x-[4px] translate-y-[4px];
+}
+
+.badge {
+  @apply inline-block px-4 py-1 rounded-none bg-highlight border-2 border-border text-text text-xs font-black uppercase tracking-widest shadow-sm;
+}
+
+.page-header {
+  @apply bg-primary text-text border-b-4 border-border mb-16 py-20 relative overflow-hidden;
+}
+
+.hero-title {
+  @apply text-5xl lg:text-7xl font-serif mb-8 leading-[1] uppercase font-black;
+}
+
+.glass {
+  @apply bg-surface border-4 border-border shadow-md;
+}
+
+.game-grid {
+  display: grid !important;
+  grid-template-columns: repeat(3, 1fr) !important;
+  gap: 1rem !important;
+  justify-items: center !important;
+  width: 100% !important;
+}
+
+@media (min-width: 640px) {
+  .game-grid {
+    grid-template-columns: repeat(4, 1fr) !important;
+    gap: 1.5rem !important;
+  }
+}
+
+.memory-card {
+  @apply relative cursor-pointer w-full;
+  aspect-ratio: 1/1;
+  perspective: 1000px;
+}
+
+.memory-card-inner {
+  @apply w-full h-full relative transition-all duration-500;
+  transform-style: preserve-3d;
+}
+
+.memory-card-front, .memory-card-back {
+  @apply absolute inset-0 w-full h-full rounded-2xl border-4 border-border shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] flex flex-col items-center justify-center;
+  backface-visibility: hidden;
+}
+
+.memory-card-front {
+  @apply bg-primary z-10;
+  background-image: radial-gradient(#000000 1.5px, transparent 1.5px);
+  background-size: 12px 12px;
+}
+
+.memory-card-back {
+  @apply z-20;
+  transform: rotateY(180deg);
+}
+
+.input-group {
+  @apply mb-6;
+}
+
+.input-label {
+  @apply block text-sm font-black uppercase tracking-widest text-text mb-2;
+}
+
+.input-field {
+  @apply w-full px-4 py-3 rounded-xl border-4 border-border bg-surface focus:outline-none focus:bg-highlight transition-all font-bold text-text shadow-sm focus:shadow-none focus:translate-x-[2px] focus:translate-y-[2px];
+}
+
+.btn-icon {
+  @apply p-3 rounded-xl border-4 border-border shadow-sm hover:shadow-none hover:translate-x-[2px] hover:translate-y-[2px] transition-all;
+}
+

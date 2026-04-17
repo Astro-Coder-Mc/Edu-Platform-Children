@@ -1,0 +1,51 @@
+{
+  "entities": {
+    "Content": {
+      "title": "Content",
+      "description": "Educational content (video, audio, game, test) for a specific subject and grade.",
+      "type": "object",
+      "properties": {
+        "title": { "type": "string" },
+        "subject": { 
+          "type": "string",
+          "enum": ["biologiya", "kimyo", "ona-tili", "fizika"]
+        },
+        "contentType": {
+          "type": "string",
+          "enum": ["video-dars", "tajriba", "audio", "game", "test"]
+        },
+        "grade": { "type": "number" },
+        "url": { "type": "string", "description": "URL for video, audio, or game link" },
+        "description": { "type": "string" },
+        "data": { "type": "object", "description": "Extra data like test questions or game config" },
+        "createdAt": { "type": "timestamp" }
+      },
+      "required": ["title", "subject", "contentType", "grade"]
+    },
+    "TestResult": {
+      "title": "TestResult",
+      "description": "A user's test or game result.",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "userName": { "type": "string" },
+        "score": { "type": "number" },
+        "total": { "type": "number" },
+        "testType": { "type": "string" },
+        "subject": { "type": "string" },
+        "createdAt": { "type": "timestamp" }
+      },
+      "required": ["userId", "score", "total", "testType"]
+    }
+  },
+  "firestore": {
+    "contents": {
+      "schema": { "$ref": "#/entities/Content" },
+      "description": "All educational materials."
+    },
+    "results": {
+      "schema": { "$ref": "#/entities/TestResult" },
+      "description": "User performance tracking."
+    }
+  }
+}
