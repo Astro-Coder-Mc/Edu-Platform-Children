@@ -46,7 +46,7 @@ export function Admin() {
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
-      if (user && user.email === 'astrojamshid@gmail.com') {
+      if (user && user.email === 'astrojamshid@gmail.com' , 'gulbahor.217a@gmail.com') {
         setIsAdmin(true);
         fetchContents();
       } else {
