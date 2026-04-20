@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion } from 'motion/react';
-import { Plus, Trash2, Video, AlertCircle, Database, Search, Code, Upload, FileVideo, CheckCircle2, Loader2 } from 'lucide-react';
+import { Plus, Trash2, Video, Search, Code, Upload, FileVideo, Loader2 } from 'lucide-react';
 import { db, auth, storage } from '../lib/firebase';
 import { collection, addDoc, getDocs, deleteDoc, doc, serverTimestamp, query, orderBy } from 'firebase/firestore';
 import { ref, uploadBytesResumable, getDownloadURL } from 'firebase/storage';
@@ -46,12 +46,13 @@ export function Admin() {
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
-      if (user && user.email === 'astrojamshid@gmail.com' , 'gulbahor.217a@gmail.com') {
+      // Email tekshiruvi || (yoki) operatori bilan to'g'rilandi
+      if (user && (user.email === 'astrojamshid@gmail.com' || user.email === 'gulbahor.217a@gmail.com')) {
         setIsAdmin(true);
         fetchContents();
       } else {
         setIsAdmin(false);
-        navigate('/'); 
+        if (!loading) navigate('/'); 
       }
       setLoading(false);
     });
@@ -71,16 +72,10 @@ export function Admin() {
     }
   };
 
-  const filteredAdminContents = contents.filter(c => 
-    c.title.toLowerCase().includes(adminSearch.toLowerCase()) ||
-    c.grade.includes(adminSearch) ||
-    c.contentType.toLowerCase().includes(adminSearch.toLowerCase())
-  );
-
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       const file = e.target.files[0];
-      if (file.size > 100 * 1024 * 1024) { // 100MB limit
+      if (file.size > 100 * 1024 * 1024) {
         addToast("Fayl hajmi juda katta (maksimal 100MB)", "error");
         return;
       }
@@ -153,7 +148,7 @@ export function Admin() {
       fetchContents();
     } catch (err) {
       console.error("Error adding document: ", err);
-      setError("Xatolik yuz berdi. " + (err instanceof Error ? err.message : ""));
+      setError("Xatolik yuz berdi.");
     } finally {
       setIsSubmitting(false);
     }
@@ -172,37 +167,13 @@ export function Admin() {
     }
   };
 
-  const seedData = async () => {
-    if (!window.confirm("Namunaviy ma'lumotlar yuklansinmi?")) return;
-    
-    setIsSubmitting(true);
-    const sampleData = [
-      { title: 'Alifbo harflari', contentType: 'video', grade: '1', url: '', iframeCode: '<iframe width="560" height="315" src="https://www.youtube.com/embed/S2p2Y3eM-C0" frameborder="0" allowfullscreen></iframe>', description: '1-sinf uchun harflar darsligi.' },
-      { title: 'Rangli tajriba', contentType: 'tajriba', grade: '1', url: '', iframeCode: '', description: 'Ranglar bilan ajoyib tajriba.' },
-      { title: 'Sonlar oyini', contentType: 'game', grade: '1', url: 'built-in', iframeCode: '', description: 'Raqamlarni organish oyini.' },
-      { title: 'Tabiat hodisalari', contentType: 'video', grade: '2', url: '', iframeCode: '<iframe width="560" height="315" src="https://www.youtube.com/embed/UR9F5EVEvLw" frameborder="0" allowfullscreen></iframe>', description: '2-sinf uchun tabiat sirlari.' },
-    ];
-
-    try {
-      for (const item of sampleData) {
-        await addDoc(collection(db, 'contents'), { ...item, createdAt: serverTimestamp() });
-      }
-      addToast("Namunaviy darslar qo'shildi", "success");
-      fetchContents();
-    } catch (err) {
-      console.error("Error seeding data:", err);
-      addToast("Ma'lumotlarni yuklashda xatolik", "error");
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
-  if (loading) return (
-    <div className="container py-20">
-      <Skeleton className="h-64 w-full mb-8" />
-      <Skeleton className="h-96 w-full" />
-    </div>
+  const filteredAdminContents = contents.filter(c => 
+    c.title.toLowerCase().includes(adminSearch.toLowerCase()) ||
+    c.grade.includes(adminSearch) ||
+    c.contentType.toLowerCase().includes(adminSearch.toLowerCase())
   );
+
+  if (loading) return <div className="container py-20"><Skeleton className="h-64 w-full mb-8" /><Skeleton className="h-96 w-full" /></div>;
   if (!isAdmin) return null;
 
   return (
@@ -245,18 +216,8 @@ export function Admin() {
                 <Upload size={18} /> Video yuklash (Kompuyuterdan)
               </label>
               <div className="relative">
-                <input 
-                  type="file" 
-                  accept="video/*" 
-                  onChange={handleFileChange} 
-                  ref={fileInputRef}
-                  className="hidden" 
-                  id="video-upload"
-                />
-                <label 
-                  htmlFor="video-upload" 
-                  className={`flex flex-col items-center justify-center w-full h-32 border-4 border-dashed border-border p-4 cursor-pointer hover:bg-bg transition-colors ${videoFile ? 'bg-bg' : 'bg-surface'}`}
-                >
+                <input type="file" accept="video/*" onChange={handleFileChange} ref={fileInputRef} className="hidden" id="video-upload" />
+                <label htmlFor="video-upload" className={`flex flex-col items-center justify-center w-full h-32 border-4 border-dashed border-border p-4 cursor-pointer hover:bg-bg transition-colors ${videoFile ? 'bg-bg' : 'bg-surface'}`}>
                   {videoFile ? (
                     <div className="flex items-center gap-3 text-primary">
                       <FileVideo size={32} />
@@ -269,58 +230,25 @@ export function Admin() {
                     <>
                       <Upload size={32} className="opacity-40 mb-2" />
                       <p className="text-sm font-bold opacity-60">Videoni tanlang yoki shu yerga tashlang</p>
-                      <p className="text-[10px] opacity-40 uppercase tracking-widest mt-1">Maksimal 100MB</p>
                     </>
                   )}
                 </label>
               </div>
-
-              {isUploading && (
-                <div className="mt-4">
-                  <div className="flex justify-between items-center mb-1 text-sm font-bold">
-                    <span>Yuklanmoqda...</span>
-                    <span>{Math.round(uploadProgress)}%</span>
-                  </div>
-                  <div className="w-full h-4 bg-bg border-2 border-border overflow-hidden">
-                    <motion.div 
-                      className="h-full bg-primary"
-                      initial={{ width: 0 }}
-                      animate={{ width: `${uploadProgress}%` }}
-                    />
-                  </div>
-                </div>
-              )}
             </div>
 
-            <div className="pt-4 border-t-2 border-border">
-              <p className="text-xs font-bold opacity-40 uppercase mb-4 text-center">YOKI LINK ORQALI</p>
-              
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-lg font-bold mb-2 flex items-center gap-2">
-                    <Video size={18} /> URL (O'yin yoki Video uchun)
-                  </label>
-                  <input type="text" value={url} onChange={(e) => setUrl(e.target.value)} placeholder="https://..." className="input-field w-full" />
-                </div>
-
-                <div>
-                  <label className="block text-lg font-bold mb-2 flex items-center gap-2">
-                    <Code size={18} /> Iframe Kod (YouTube/Vimeo uchun)
-                  </label>
-                  <textarea value={iframeCode} onChange={(e) => setIframeCode(e.target.value)} placeholder="<iframe>...</iframe>" className="input-field w-full min-h-[80px]" />
-                </div>
+            <div className="pt-4 border-t-2 border-border text-center">
+              <p className="text-xs font-bold opacity-40 uppercase mb-4">YOKI LINK ORQALI</p>
+              <div className="space-y-4 text-left">
+                <label className="block text-lg font-bold mb-2 flex items-center gap-2"><Video size={18} /> URL</label>
+                <input type="text" value={url} onChange={(e) => setUrl(e.target.value)} placeholder="https://..." className="input-field w-full" />
+                <label className="block text-lg font-bold mb-2 flex items-center gap-2"><Code size={18} /> Iframe</label>
+                <textarea value={iframeCode} onChange={(e) => setIframeCode(e.target.value)} placeholder="<iframe>...</iframe>" className="input-field w-full min-h-[80px]" />
               </div>
-            </div>
-
-            <div>
-              <label className="block text-lg font-bold mb-2">Tavsif</label>
-              <textarea value={description} onChange={(e) => setDescription(e.target.value)} className="input-field w-full min-h-[100px]" />
             </div>
 
             <button type="submit" disabled={isSubmitting} className="btn btn-primary w-full text-lg">
               {isSubmitting ? "Saqlanmoqda..." : "Saqlash"}
             </button>
-            <button type="button" onClick={seedData} className="btn bg-highlight w-full mt-4 text-xs">Namunaviy ma'lumotlar</button>
           </form>
         </motion.div>
 
@@ -337,7 +265,7 @@ export function Admin() {
             {filteredAdminContents.map((item) => (
               <div key={item.id} className="bg-surface border-4 border-border p-4 flex gap-4 items-center shadow-sm">
                 <div className="w-32 aspect-video bg-bg border-2 border-border overflow-hidden flex items-center justify-center text-xs text-center p-2">
-                  {item.iframeCode ? <div className="opacity-50">Video (Iframe)</div> : item.contentType}
+                  {item.contentType === 'video' ? '🎬 Video' : item.contentType}
                 </div>
                 <div className="flex-grow">
                   <div className="flex gap-2 mb-1">
@@ -346,7 +274,9 @@ export function Admin() {
                   </div>
                   <h3 className="font-bold">{item.title}</h3>
                 </div>
-                <button onClick={() => handleDelete(item.id)} className="btn bg-error p-2 border-2 border-border"><Trash2 size={18} /></button>
+                <button onClick={() => handleDelete(item.id)} className="btn bg-error p-2 border-2 border-border">
+                  <Trash2 size={18} />
+                </button>
               </div>
             ))}
           </div>
