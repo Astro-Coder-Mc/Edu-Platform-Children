@@ -97,15 +97,37 @@ export function Profile() {
     setIsLoading(true);
     setErrorMsg(null);
     try {
-      if (isRegistering) {
-        const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-        await updateProfile(userCredential.user, { displayName });
-      } else {
+      // Step 1: Try to sign in first
+      try {
         await signInWithEmailAndPassword(auth, email, password);
+      } catch (loginError: any) {
+        // Step 2: If user not found, try to register them
+        if (loginError.code === 'auth/user-not-found') {
+          const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+          // Set a default display name from email
+          const defaultName = email.split('@')[0];
+          await updateProfile(userCredential.user, { displayName: defaultName });
+        } else {
+          // If it's another error (like wrong password), throw it to the outer catch
+          throw loginError;
+        }
       }
     } catch (error: any) {
-      console.error("Email auth failed", error);
-      setErrorMsg(error.message);
+      console.error("Auth failed", error);
+      if (error.code === 'auth/wrong-password') {
+        setErrorMsg("Parol noto'g'ri. Iltimos, qayta urinib ko'ring.");
+      } else if (error.code === 'auth/invalid-email') {
+        setErrorMsg("Email manzili noto'g'ri shaklda.");
+      } else if (error.code === 'auth/weak-password') {
+        setErrorMsg("Parol juda kuchsiz. Kamida 6 ta belgi bo'lishi kerak.");
+      } else if (error.code === 'auth/unauthorized-domain') {
+        setErrorMsg(
+          "Ushbu domen Firebase'da ruxsat etilmagan. \n\n" + 
+          "Yechim: Firebase Console -> Authentication -> Settings -> Authorized domains bo'limiga 'edu-platform-children.vercel.app' manzilini qo'shing."
+        );
+      } else {
+        setErrorMsg(error.message);
+      }
       setIsLoading(false);
     }
   };
@@ -158,37 +180,21 @@ export function Profile() {
           
           <div className="text-center mb-10 mt-4">
             <h2 className="text-4xl mb-4 font-serif text-text uppercase font-black">
-              {isRegistering ? "Ro'yxatdan o'tish" : "Xush Kelibsiz"}
+              Kirish
             </h2>
             <p className="text-text font-bold text-lg leading-relaxed bg-highlight border-4 border-border p-4 shadow-sm">
-              {isRegistering ? "Platformaga qo'shiling va o'rganishni boshlang!" : "Profilingizga kiring va natijalaringizni kuzating."}
+              Profilingizga kiring yoki yangi hisob yarating.
             </p>
           </div>
 
           {errorMsg && (
-            <div className="bg-error text-surface p-4 border-4 border-border mb-6 font-bold flex items-start gap-3">
+            <div className="bg-error text-surface p-4 border-4 border-border mb-6 font-bold flex items-start gap-3 whitespace-pre-wrap">
               <AlertCircle size={24} className="flex-shrink-0 mt-0.5" />
-              <p>{errorMsg}</p>
+              <p className="text-sm">{errorMsg}</p>
             </div>
           )}
 
           <form onSubmit={handleEmailAuth} className="space-y-4 mb-8">
-            {isRegistering && (
-              <div className="space-y-2">
-                <label className="font-black uppercase text-xs tracking-widest">Ism-sharif</label>
-                <div className="relative">
-                  <User className="absolute left-4 top-1/2 -translate-y-1/2 opacity-50" size={20} />
-                  <input 
-                    type="text" 
-                    required 
-                    value={displayName}
-                    onChange={(e) => setDisplayName(e.target.value)}
-                    className="input-field w-full pl-12" 
-                    placeholder="Ismingizni kiriting" 
-                  />
-                </div>
-              </div>
-            )}
             <div className="space-y-2">
               <label className="font-black uppercase text-xs tracking-widest">Email</label>
               <div className="relative">
@@ -216,6 +222,7 @@ export function Profile() {
                   placeholder="••••••••" 
                 />
               </div>
+              <p className="text-[10px] uppercase font-black opacity-50 mt-1">Yangi foydalanuvchilar uchun ham shu formadan foydalaniladi.</p>
             </div>
             <button 
               type="submit" 
@@ -224,8 +231,8 @@ export function Profile() {
             >
               {isLoading ? <Loader2 className="animate-spin" size={28} /> : (
                 <>
-                  {isRegistering ? <UserPlus size={24} /> : <Key size={24} />}
-                  {isRegistering ? "Ro'yxatdan o'tish" : "Kirish"}
+                  <Key size={24} />
+                  KIRISH
                 </>
               )}
             </button>
@@ -255,16 +262,6 @@ export function Profile() {
               </>
             )}
           </button>
-
-          <p className="mt-8 text-center font-bold">
-            {isRegistering ? "Hisobingiz bormi?" : "Hisobingiz yo'qmi?"}
-            <button 
-              onClick={() => setIsRegistering(!isRegistering)}
-              className="ml-2 text-primary hover:underline"
-            >
-              {isRegistering ? "Kirish" : "Ro'yxatdan o'tish"}
-            </button>
-          </p>
         </motion.div>
       </div>
     );

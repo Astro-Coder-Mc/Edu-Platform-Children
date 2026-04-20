@@ -40,11 +40,11 @@ export function Layout() {
     return () => unsubscribe();
   }, []);
 
-  const subjects = [
-    { name: 'Biologiya', path: '/subject/biologiya', icon: <Activity size={18} />, color: 'bg-success' },
-    { name: 'Kimyo', path: '/subject/kimyo', icon: <FlaskConical size={18} />, color: 'bg-accent' },
-    { name: 'Fizika', path: '/subject/fizika', icon: <Atom size={18} />, color: 'bg-primary' },
-    { name: 'Ona tili', path: '/subject/ona-tili', icon: <Languages size={18} />, color: 'bg-highlight' },
+  const grades = [
+    { name: '1-sinf', path: '/grade/1', icon: <div className="text-xl font-black">1</div>, color: 'bg-success' },
+    { name: '2-sinf', path: '/grade/2', icon: <div className="text-xl font-black">2</div>, color: 'bg-accent' },
+    { name: '3-sinf', path: '/grade/3', icon: <div className="text-xl font-black">3</div>, color: 'bg-primary' },
+    { name: '4-sinf', path: '/grade/4', icon: <div className="text-xl font-black">4</div>, color: 'bg-highlight' },
   ];
 
   const navLinks = [
@@ -101,19 +101,19 @@ export function Layout() {
                       </Link>
                     ))}
                     <div className="border-t-4 border-border pt-6 mt-4">
-                      <p className="text-xs font-black uppercase tracking-widest mb-4 opacity-50">Fanlar bo'limi</p>
-                      <div className="grid grid-cols-1 gap-4">
-                        {subjects.map((sub) => (
+                      <p className="text-xs font-black uppercase tracking-widest mb-4 opacity-50">Sinflar</p>
+                      <div className="grid grid-cols-2 gap-4">
+                        {grades.map((grade) => (
                           <Link 
-                            key={sub.path}
-                            to={sub.path}
+                            key={grade.path}
+                            to={grade.path}
                             onClick={() => setIsMenuOpen(false)}
-                            className="flex items-center gap-4 p-4 bg-bg border-4 border-border font-bold hover:bg-highlight"
+                            className="flex flex-col items-center justify-center gap-2 p-4 bg-bg border-4 border-border font-bold hover:bg-highlight"
                           >
-                            <div className={`p-2 border-2 border-border ${sub.color}`}>
-                              {sub.icon}
+                            <div className={`w-12 h-12 flex items-center justify-center border-2 border-border shadow-sm ${grade.color}`}>
+                              {grade.icon}
                             </div>
-                            {sub.name}
+                            {grade.name}
                           </Link>
                         ))}
                       </div>
@@ -138,13 +138,13 @@ export function Layout() {
               </Link>
             ))}
             
-            {/* Subjects Dropdown */}
+            {/* Grades Dropdown */}
             <div className="relative ml-4 group">
               <button 
                 onClick={() => setIsSubjectsOpen(!isSubjectsOpen)}
-                className="btn btn-primary flex items-center gap-2 py-2 px-4"
+                className="btn btn-primary flex items-center gap-2 py-2 px-4 shadow-sm"
               >
-                Fanlar <ChevronDown size={18} className={`transition-transform ${isSubjectsOpen ? 'rotate-180' : ''}`} />
+                Sinflar <ChevronDown size={18} className={`transition-transform ${isSubjectsOpen ? 'rotate-180' : ''}`} />
               </button>
               
               <AnimatePresence>
@@ -153,18 +153,18 @@ export function Layout() {
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: 10 }}
-                    className="absolute right-0 mt-2 w-56 bg-surface border-4 border-border shadow-sm z-50"
+                    className="absolute right-0 mt-2 w-48 bg-surface border-4 border-border shadow-sm z-50"
                   >
-                    {subjects.map((sub) => (
+                    {grades.map((grade) => (
                       <Link 
-                        key={sub.path}
-                        to={sub.path}
+                        key={grade.path}
+                        to={grade.path}
                         className="flex items-center gap-3 p-3 hover:bg-highlight border-b-2 border-border last:border-b-0 transition-colors font-bold text-sm"
                       >
-                        <div className={`p-1 border-2 border-border ${sub.color}`}>
-                          {sub.icon}
+                        <div className={`w-8 h-8 flex items-center justify-center border-2 border-border shadow-sm ${grade.color}`}>
+                          {grade.icon}
                         </div>
-                        {sub.name}
+                        {grade.name}
                       </Link>
                     ))}
                   </motion.div>
@@ -206,7 +206,7 @@ export function Layout() {
                 <span className="text-2xl font-serif">Bilim Platformasi</span>
               </div>
               <p className="text-text max-w-md text-lg leading-relaxed mb-8 font-bold">
-                1-5 sinf o'quvchilari uchun interaktiv va qiziqarli ta'lim platformasi. Biologiya, Kimyo, Fizika va Ona tili fanlari bo'yicha darsliklar.
+                1-4 sinf o'quvchilari uchun interaktiv va qiziqarli ta'lim platformasi. O'yinlar, tajribalar va videolar orqali o'rganish.
               </p>
               <div className="flex gap-4">
                 {/* Social placeholders */}
@@ -218,10 +218,10 @@ export function Layout() {
               </div>
             </div>
             <div>
-              <h4 className="text-text font-serif text-xl mb-6">Fanlar</h4>
+              <h4 className="text-text font-serif text-xl mb-6">Sinflar</h4>
               <ul className="footer-links space-y-4">
-                {subjects.map(sub => (
-                  <li key={sub.path}><Link to={sub.path} className="hover:text-surface transition-colors">{sub.name}</Link></li>
+                {grades.map(grade => (
+                  <li key={grade.path}><Link to={grade.path} className="hover:text-surface transition-colors">{grade.name}</Link></li>
                 ))}
               </ul>
             </div>

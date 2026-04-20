@@ -5,12 +5,12 @@ import { GoogleGenAI } from "@google/genai";
 import Markdown from 'react-markdown';
 
 // Lazy initialization or guard for API Key
-const getAIClient = () => {
+const getAIClient = (): GoogleGenAI | null => {
   const apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey || apiKey === "undefined" || apiKey === "MY_GEMINI_API_KEY") {
     return null;
   }
-  return new GoogleGenAI(apiKey);
+  return new (GoogleGenAI as any)(apiKey);
 };
 
 const SUGGESTIONS = [
@@ -63,7 +63,7 @@ export function ScienceAssistant() {
         parts: [{ text: m.content }]
       }));
 
-      const response = await ai.getGenerativeModel({
+      const response = await (ai as any).getGenerativeModel({
         model: "gemini-3-flash-preview",
         systemInstruction: `Siz "Bilim Platformasi"ning bosh ilmiy xodimi va o'quvchilarning sevimli yordamchisisiz. 
           Vazifangiz: 1-5 sinf o'quvchilariga Tabiiy fanlar (Biologiya, Fizika, Kimyo, Ona tili va Geografiya) bo'yicha yordam berish.

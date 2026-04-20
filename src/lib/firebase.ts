@@ -1,6 +1,7 @@
 import { initializeApp } from 'firebase/app';
 import { getAuth } from 'firebase/auth';
-import { initializeFirestore, doc, getDocFromServer, terminate } from 'firebase/firestore';
+import { initializeFirestore, doc, getDocFromServer } from 'firebase/firestore';
+import { getStorage } from 'firebase/storage';
 import firebaseConfig from '../../firebase-applet-config.json';
 
 // Simple validation to prevent crashes locally
@@ -12,12 +13,13 @@ const app = initializeApp(isValidConfig ? firebaseConfig : {
   appId: "PLACEHOLDER"
 });
 
-// Use initializeFirestore with long polling to avoid WebSocket issues in iframes
+// Use initializeFirestore with long polling to bypass connectivity issues in sandbox/iframes (WebSockets are often blocked)
 export const db = initializeFirestore(app, {
   experimentalForceLongPolling: true,
 }, (isValidConfig && firebaseConfig.firestoreDatabaseId) || undefined);
 
 export const auth = getAuth(app);
+export const storage = getStorage(app);
 
 // Error Handling Spec for Firestore Operations
 export enum OperationType {
@@ -71,17 +73,23 @@ export function handleFirestoreError(error: unknown, operationType: OperationTyp
   throw new Error(JSON.stringify(errInfo));
 }
 
+// Global connection state
+let isFirestoreConnected = false;
+
 // Connection test as per system instructions
 async function testConnection() {
   try {
-    // Try to fetch a non-existent doc to test connectivity
-    await getDocFromServer(doc(db, '_connection_test_', 'ping'));
-    console.log("Firestore connection successful.");
-  } catch (error) {
-    if (error instanceof Error && error.message.includes('the client is offline')) {
-      console.error("Please check your Firebase configuration. The client is offline.");
+    // Try to fetch with a timeout-like behavior using getDocFromServer
+    // If this fails, it indicates a configuration or network issue
+    const testDoc = doc(db, '_connection_test_', 'ping');
+    await getDocFromServer(testDoc);
+    isFirestoreConnected = true;
+    console.log("Firestore connection verified successfully.");
+  } catch (error: any) {
+    if (error?.message?.includes('the client is offline') || error?.code === 'unavailable') {
+      console.warn("Firestore backend currently unreachable. Operating in offline mode.");
+      console.info("Please check if your Firebase Project ID and Database ID in firebase-applet-config.json are correct.");
     }
-    // Skip logging for other errors during test
   }
 }
 

@@ -2,13 +2,15 @@ import { PlayCircle, FileText, Download, ExternalLink, Microscope, Droplets, Sun
 import { motion } from 'motion/react';
 import { useState, useEffect } from 'react';
 import { db, handleFirestoreError, OperationType } from '../lib/firebase';
-import { collection, getDocs, query, orderBy, where } from 'firebase/firestore';
+import { collection, onSnapshot, query, orderBy, where } from 'firebase/firestore';
 
 interface Content {
   id: string;
   title: string;
-  grade: number;
+  grade: string;
   url: string;
+  iframeCode?: string;
+  videoUrl?: string;
   description?: string;
   contentType: string;
 }
@@ -19,27 +21,24 @@ export function Theory() {
   const [searchQuery, setSearchQuery] = useState('');
 
   useEffect(() => {
-    const fetchExperiments = async () => {
-      const path = 'contents';
-      try {
-        const q = query(
-          collection(db, path), 
-          where('contentType', '==', 'tajriba'),
-          orderBy('grade', 'asc'), 
-          orderBy('createdAt', 'desc')
-        );
-        const snapshot = await getDocs(q);
-        const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Content));
-        setExperiments(data);
-      } catch (err) {
-        console.error("Error fetching experiments:", err);
-        handleFirestoreError(err, OperationType.LIST, path);
-      } finally {
-        setLoading(false);
-      }
-    };
+    setLoading(true);
+    const q = query(
+      collection(db, 'contents'), 
+      where('contentType', '==', 'tajriba'),
+      orderBy('grade', 'asc'), 
+      orderBy('createdAt', 'desc')
+    );
 
-    fetchExperiments();
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Content));
+      setExperiments(data);
+      setLoading(false);
+    }, (err) => {
+      console.error("Error fetching experiments:", err);
+      setLoading(false);
+    });
+
+    return () => unsubscribe();
   }, []);
 
   const filteredExperiments = experiments.filter(exp => 
@@ -47,22 +46,22 @@ export function Theory() {
     exp.description?.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  const getIconForGrade = (grade: number) => {
+  const getIconForGrade = (grade: string) => {
     switch (grade) {
-      case 1: return <Microscope size={40} />;
-      case 2: return <Droplets size={40} />;
-      case 3: return <Magnet size={40} />;
-      case 4: return <Sun size={40} />;
+      case '1': return <Microscope size={40} />;
+      case '2': return <Droplets size={40} />;
+      case '3': return <Magnet size={40} />;
+      case '4': return <Sun size={40} />;
       default: return <PlayCircle size={40} />;
     }
   };
 
-  const getColorForGrade = (grade: number) => {
+  const getColorForGrade = (grade: string) => {
     switch (grade) {
-      case 1: return 'bg-primary';
-      case 2: return 'bg-accent';
-      case 3: return 'bg-error';
-      case 4: return 'bg-highlight';
+      case '1': return 'bg-primary';
+      case '2': return 'bg-accent';
+      case '3': return 'bg-error';
+      case '4': return 'bg-highlight';
       default: return 'bg-primary';
     }
   };
@@ -72,7 +71,7 @@ export function Theory() {
   }
 
   // Group experiments by grade
-  const groupedExperiments = [1, 2, 3, 4].map(grade => ({
+  const groupedExperiments = ['1', '2', '3', '4'].map(grade => ({
     grade,
     items: experiments.filter(exp => exp.grade === grade)
   }));
@@ -136,8 +135,15 @@ export function Theory() {
                       <div className={`badge ${getColorForGrade(exp.grade)}`}>{exp.grade}-sinf</div>
                       <h3 className="text-3xl font-bold">{exp.title}</h3>
                     </div>
-                    <div className="relative w-full aspect-video bg-bg border-4 border-border mb-6 overflow-hidden">
-                      {exp.url.includes('youtube.com') || exp.url.includes('youtu.be') ? (
+                    <div className="relative w-full aspect-video bg-bg border-4 border-border mb-6 overflow-hidden flex items-center justify-center">
+                      {exp.videoUrl ? (
+                        <video src={exp.videoUrl} controls className="w-full h-full object-cover" />
+                      ) : exp.iframeCode ? (
+                        <div 
+                          className="w-full h-full"
+                          dangerouslySetInnerHTML={{ __html: exp.iframeCode }} 
+                        />
+                      ) : exp.url.includes('youtube.com') || exp.url.includes('youtu.be') ? (
                         <iframe 
                           src={exp.url.replace('watch?v=', 'embed/').replace('youtu.be/', 'youtube.com/embed/')} 
                           className="w-full h-full object-cover"
@@ -176,8 +182,15 @@ export function Theory() {
                     {items.map(exp => (
                       <div key={exp.id} className="bg-surface border-4 border-border p-6 shadow-sm">
                         <h3 className="text-3xl font-bold mb-4">{exp.title}</h3>
-                        <div className="relative w-full aspect-video bg-bg border-4 border-border mb-6 overflow-hidden">
-                          {exp.url.includes('youtube.com') || exp.url.includes('youtu.be') ? (
+                        <div className="relative w-full aspect-video bg-bg border-4 border-border mb-6 overflow-hidden flex items-center justify-center">
+                          {exp.videoUrl ? (
+                            <video src={exp.videoUrl} controls className="w-full h-full object-cover" />
+                          ) : exp.iframeCode ? (
+                            <div 
+                              className="w-full h-full"
+                              dangerouslySetInnerHTML={{ __html: exp.iframeCode }} 
+                            />
+                          ) : exp.url.includes('youtube.com') || exp.url.includes('youtu.be') ? (
                             <iframe 
                               src={exp.url.replace('watch?v=', 'embed/').replace('youtu.be/', 'youtube.com/embed/')} 
                               className="w-full h-full object-cover"

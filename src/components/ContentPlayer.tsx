@@ -11,43 +11,23 @@ interface ContentPlayerProps {
     title: string;
     contentType: string;
     url: string;
-    subject: string;
-    grade: number;
+    iframeCode?: string;
+    videoUrl?: string;
+    grade: string;
     description?: string;
   };
   onClose: () => void;
 }
 
-const QUIZ_DATA = {
-  biologiya: [
-    { q: "O'simliklar nima yordamida nafas oladi?", a: ["Barglar", "Ildizlar", "Gullar"], c: 0 },
-    { q: "Sutemizuvchi hayvonni toping.", a: ["Baliq", "Fil", "Ilon"], c: 1 },
-    { q: "Inson tanasidagi eng katta a'zo qaysi?", a: ["Yurak", "Jigar", "Teri"], c: 2 },
-    { q: "Qaysi hayvon qishda uyquga ketadi?", a: ["Bo'ri", "Ayiq", "Tulki"], c: 1 },
-    { q: "O'simliklarning yashil rangi nima bilan bog'liq?", a: ["Xlorofill", "Suv", "Quyosh"], c: 0 },
-  ],
-  kimyo: [
-    { q: "Suvning kimyoviy formulasi qanday?", a: ["CO2", "H2O", "O2"], c: 1 },
-    { q: "Tuzning ta'mi qanday?", a: ["Shirin", "Sho'r", "Achchiq"], c: 1 },
-    { q: "Gaz holatidagi moddani toping.", a: ["Muz", "Havo", "Sut"], c: 1 },
-    { q: "Temir zanglaganda nima bilan reaksiyaga kirishadi?", a: ["Azot", "Kislorod", "Vodorod"], c: 1 },
-    { q: "Eng yengil gaz qaysi?", a: ["Geliy", "Vodorod", "Kislorod"], c: 1 },
-  ],
-  fizika: [
-    { q: "Yerning tortish kuchi nima deyiladi?", a: ["Inersiya", "Gravitatsiya", "Tezlik"], c: 1 },
-    { q: "Elektr tokini o'tkazuvchi modda?", a: ["Yog'och", "Temir", "Plastmassa"], c: 1 },
-    { q: "Yorug'lik manbai qaysi?", a: ["Oy", "Quyosh", "Yer"], c: 1 },
-    { q: "Muz necha darajada eriydi?", a: ["0°C", "10°C", "100°C"], c: 0 },
-    { q: "Magnit nimalarni o'ziga tortadi?", a: ["Shisha", "Temir", "Qog'oz"], c: 1 },
-  ],
-  'ona-tili': [
-    { q: "Ot so'z turkumi nimani bildiradi?", a: ["Harakat", "Narsa-buyum", "Belgi"], c: 1 },
-    { q: "Unli tovushlar nechta?", a: ["5 ta", "6 ta", "10 ta"], c: 1 },
-    { q: "Gapning oxiriga nima qo'yiladi?", a: ["Vergul", "Nuqta", "Chiziqcha"], c: 1 },
-    { q: "Sifat so'z turkumi qanday so'roqlarga javob bo'ladi?", a: ["Kim? Nima?", "Qanday? Qanaqa?", "Nima qildi?"], c: 1 },
-    { q: "O'zbek alifbosida nechta harf bor?", a: ["26 ta", "29 ta", "30 ta"], c: 1 },
-  ]
-};
+const QUIZ_DATA = [
+  { q: "O'simliklar nima yordamida nafas oladi?", a: ["Barglar", "Ildizlar", "Gullar"], c: 0 },
+  { q: "Sutemizuvchi hayvonni toping.", a: ["Baliq", "Fil", "Ilon"], c: 1 },
+  { q: "Inson tanasidagi eng katta a'zo qaysi?", a: ["Yurak", "Jigar", "Teri"], c: 2 },
+  { q: "Qaysi hayvon qishda uyquga ketadi?", a: ["Bo'ri", "Ayiq", "Tulki"], c: 1 },
+  { q: "O'simliklarning yashil rangi nima bilan bog'liq?", a: ["Xlorofill", "Suv", "Quyosh"], c: 0 },
+  { q: "Suvning kimyoviy formulasi qanday?", a: ["CO2", "H2O", "O2"], c: 1 },
+  { q: "Yerning tortish kuchi nima deyiladi?", a: ["Inersiya", "Gravitatsiya", "Tezlik"], c: 1 },
+];
 
 export function ContentPlayer({ content, onClose }: ContentPlayerProps) {
   const [gameState, setGameState] = useState<'intro' | 'playing' | 'result'>('intro');
@@ -59,10 +39,9 @@ export function ContentPlayer({ content, onClose }: ContentPlayerProps) {
   const [quizQuestions, setQuizQuestions] = useState<any[]>([]);
 
   useEffect(() => {
-    const rawData = QUIZ_DATA[content.subject as keyof typeof QUIZ_DATA] || QUIZ_DATA.biologiya;
-    const shuffled = [...rawData].sort(() => Math.random() - 0.5);
+    const shuffled = [...QUIZ_DATA].sort(() => Math.random() - 0.5).slice(0, 5);
     setQuizQuestions(shuffled);
-  }, [content.subject]);
+  }, []);
 
   const isExternalGame = content.contentType === 'game' && content.url && content.url !== 'built-in' && content.url.startsWith('http');
 
@@ -123,7 +102,7 @@ export function ContentPlayer({ content, onClose }: ContentPlayerProps) {
         score: finalScore,
         total: quizQuestions.length,
         testType: content.title,
-        subject: content.subject,
+        grade: content.grade,
         createdAt: serverTimestamp()
       });
     } catch (err) {
@@ -157,14 +136,30 @@ export function ContentPlayer({ content, onClose }: ContentPlayerProps) {
 
         {/* Content Area */}
         <div className="flex-grow overflow-y-auto p-8 flex flex-col items-center justify-center bg-bg/50">
-          {content.contentType === 'video-dars' || content.contentType === 'tajriba' ? (
-            <div className="w-full aspect-video border-8 border-border shadow-lg overflow-hidden bg-text">
-              <iframe 
-                src={content.url.replace('watch?v=', 'embed/').replace('youtu.be/', 'youtube.com/embed/')} 
-                className="w-full h-full"
-                title={content.title}
-                allowFullScreen
-              ></iframe>
+          {(content.contentType === 'video' || content.contentType === 'tajriba' || content.iframeCode || content.videoUrl) ? (
+            <div className="w-full aspect-video border-8 border-border shadow-lg overflow-hidden bg-text flex items-center justify-center">
+              {content.videoUrl ? (
+                <video 
+                  src={content.videoUrl} 
+                  controls 
+                  className="w-full h-full"
+                  autoPlay
+                >
+                  Sizning brauzeringiz video qo'llab-quvvatlamaydi.
+                </video>
+              ) : content.iframeCode ? (
+                <div 
+                  className="w-full h-full"
+                  dangerouslySetInnerHTML={{ __html: content.iframeCode }} 
+                />
+              ) : (
+                <iframe 
+                  src={content.url.replace('watch?v=', 'embed/').replace('youtu.be/', 'youtube.com/embed/')} 
+                  className="w-full h-full"
+                  title={content.title}
+                  allowFullScreen
+                ></iframe>
+              )}
             </div>
           ) : content.contentType === 'audio' ? (
             <div className="text-center space-y-8">
@@ -352,7 +347,7 @@ export function ContentPlayer({ content, onClose }: ContentPlayerProps) {
             <div className="w-12 h-12 bg-surface border-4 border-border flex items-center justify-center font-black">
               {content.grade}
             </div>
-            <span className="font-bold uppercase tracking-widest">{content.subject} fani, {content.grade}-sinf</span>
+            <span className="font-bold uppercase tracking-widest">{content.grade}-sinf</span>
           </div>
           <div className="hidden md:block text-sm font-bold opacity-50">
             Bilim Platformasi © 2024

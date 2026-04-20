@@ -2,16 +2,19 @@ import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { db } from '../lib/firebase';
 import { collection, query, where, getDocs, doc, getDoc } from 'firebase/firestore';
-import { PlayCircle, Music, Gamepad2, FileText, Heart, Search, Loader2, ChevronRight, Bookmark } from 'lucide-react';
+import { PlayCircle, Music, Gamepad2, FileText, Heart, Search, Loader2 as LoaderIcon, ChevronRight, Bookmark } from 'lucide-react';
 import { ContentPlayer } from '../components/ContentPlayer';
+import { useToast } from '../context/ToastContext';
+import { ContentSkeleton } from '../components/ui/Skeleton';
 
 interface Content {
   id: string;
   title: string;
-  subject: string;
   contentType: string;
-  grade: number;
+  grade: string;
   url: string;
+  iframeCode?: string;
+  videoUrl?: string;
   description?: string;
 }
 
@@ -20,6 +23,7 @@ export function Library() {
   const [loading, setLoading] = useState(true);
   const [selectedContent, setSelectedContent] = useState<Content | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
+  const { addToast } = useToast();
 
   useEffect(() => {
     const fetchFavorites = async () => {
@@ -33,8 +37,6 @@ export function Library() {
       setLoading(true);
       try {
         const results: Content[] = [];
-        // Firestore 'in' query limitation (max 10-30 items depending on version/config)
-        // For children apps, we can just fetch all individually or in chunks
         for (const id of favIds) {
           const docRef = doc(db, 'contents', id);
           const docSnap = await getDoc(docRef);
@@ -45,6 +47,7 @@ export function Library() {
         setFavorites(results);
       } catch (err) {
         console.error("Error fetching library:", err);
+        addToast("Kutubxonani yuklashda xatolik yuz berdi", "error");
       } finally {
         setLoading(false);
       }
@@ -59,17 +62,20 @@ export function Library() {
     setFavorites(updatedFavs);
     const favIds = updatedFavs.map(f => f.id);
     localStorage.setItem('fav_contents', JSON.stringify(favIds));
+    addToast("Kutubxonadan olib tashlandi", "info");
   };
 
   const filteredFavorites = favorites.filter(f =>
     f.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    f.subject.toLowerCase().includes(searchQuery.toLowerCase())
+    f.description?.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   if (loading) {
     return (
-      <div className="container flex justify-center items-center min-h-[60vh]">
-        <Loader2 className="animate-spin text-primary" size={64} />
+      <div className="container py-12">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+           <ContentSkeleton /><ContentSkeleton /><ContentSkeleton />
+        </div>
       </div>
     );
   }
@@ -144,7 +150,7 @@ export function Library() {
                       referrerPolicy="no-referrer"
                     />
                     <div className="relative z-10 p-4 bg-surface/90 border-4 border-border rounded-full shadow-sm group-hover:scale-110 transition-transform">
-                      {content.contentType === 'video-dars' || content.contentType === 'tajriba' ? <PlayCircle size={40} /> : 
+                      {content.contentType === 'video' || content.contentType === 'tajriba' ? <PlayCircle size={40} /> : 
                        content.contentType === 'audio' ? <Music size={40} /> : 
                        content.contentType === 'game' ? <Gamepad2 size={40} /> : <FileText size={40} />}
                     </div>
@@ -152,9 +158,6 @@ export function Library() {
                   
                   <div className="absolute top-4 left-4">
                     <span className="badge bg-surface font-black">{content.grade}-sinf</span>
-                  </div>
-                  <div className="absolute bottom-4 left-4">
-                    <span className="badge bg-primary uppercase text-[10px] tracking-widest">{content.subject}</span>
                   </div>
                 </div>
                 
